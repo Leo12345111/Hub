@@ -1,9 +1,9 @@
-local UIS = game:GetService("UserInputService")
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
+local UIS=game:GetService("UserInputService")
+local Players=game:GetService("Players")
+local RunService=game:GetService("RunService")
+local LocalPlayer=Players.LocalPlayer
 
-local scripts = {
+local scripts={
 
 {name="Fly",fav=false,run=function()
 
@@ -21,8 +21,8 @@ local conn
 local gui=Instance.new("ScreenGui",game.CoreGui)
 
 local frame=Instance.new("Frame",gui)
-frame.Size=UDim2.new(0,220,0,130)
-frame.Position=UDim2.new(0.5,-110,0.5,-65)
+frame.Size=UDim2.new(0,220,0,120)
+frame.Position=UDim2.new(0.5,-110,0.5,-60)
 frame.BackgroundColor3=Color3.fromRGB(20,20,20)
 frame.Active=true
 frame.Draggable=true
@@ -34,17 +34,15 @@ close.Position=UDim2.new(1,-30,0,5)
 close.Text="X"
 close.BackgroundColor3=Color3.fromRGB(120,30,30)
 close.TextColor3=Color3.new(1,1,1)
-Instance.new("UICorner",close)
 
 local speedBox=Instance.new("TextBox",frame)
 speedBox.Size=UDim2.new(0.8,0,0,30)
 speedBox.Position=UDim2.new(0.1,0,0.25,0)
-speedBox.Text=""
 speedBox.PlaceholderText="Speed"
+speedBox.Text=""
 speedBox.ClearTextOnFocus=false
 speedBox.BackgroundColor3=Color3.fromRGB(35,35,35)
 speedBox.TextColor3=Color3.new(1,1,1)
-Instance.new("UICorner",speedBox)
 
 local toggle=Instance.new("TextButton",frame)
 toggle.Size=UDim2.new(0.8,0,0,30)
@@ -52,21 +50,12 @@ toggle.Position=UDim2.new(0.1,0,0.65,0)
 toggle.Text="Start Fly"
 toggle.BackgroundColor3=Color3.fromRGB(40,40,40)
 toggle.TextColor3=Color3.new(1,1,1)
-Instance.new("UICorner",toggle)
 
 speedBox:GetPropertyChangedSignal("Text"):Connect(function()
-
-local text=speedBox.Text
-
-if text=="TextBox" then
-speedBox.Text=""
-return
-end
-
-text=text:gsub("[^%d%.]","")
-
-speedBox.Text=text
-
+local t=speedBox.Text
+if t=="TextBox" then speedBox.Text="" return end
+t=t:gsub("[^%d%.]","")
+speedBox.Text=t
 end)
 
 UIS.InputBegan:Connect(function(i,g)
@@ -161,15 +150,83 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/K1LAS1K/Ultimate-Flin
 end},
 
 {name="Noclip",fav=false,run=function()
-RunService.Stepped:Connect(function()
-if LocalPlayer.Character then
-for _,v in pairs(LocalPlayer.Character:GetDescendants()) do
+
+local player=Players.LocalPlayer
+local noclip=false
+local connection
+
+local gui=Instance.new("ScreenGui",game.CoreGui)
+
+local frame=Instance.new("Frame",gui)
+frame.Size=UDim2.new(0,200,0,100)
+frame.Position=UDim2.new(0.5,-100,0.5,-50)
+frame.BackgroundColor3=Color3.fromRGB(20,20,20)
+frame.Active=true
+frame.Draggable=true
+
+local toggle=Instance.new("TextButton",frame)
+toggle.Size=UDim2.new(0.8,0,0,35)
+toggle.Position=UDim2.new(0.1,0,0.45,0)
+toggle.Text="Enable Noclip"
+toggle.BackgroundColor3=Color3.fromRGB(40,40,40)
+toggle.TextColor3=Color3.new(1,1,1)
+
+local close=Instance.new("TextButton",frame)
+close.Size=UDim2.new(0,25,0,25)
+close.Position=UDim2.new(1,-30,0,5)
+close.Text="X"
+close.BackgroundColor3=Color3.fromRGB(120,30,30)
+close.TextColor3=Color3.new(1,1,1)
+
+local function start()
+
+connection=RunService.Stepped:Connect(function()
+
+if player.Character then
+for _,v in pairs(player.Character:GetDescendants()) do
 if v:IsA("BasePart") then
 v.CanCollide=false
 end
 end
 end
+
 end)
+
+end
+
+local function stop()
+
+if connection then connection:Disconnect() end
+
+if player.Character then
+for _,v in pairs(player.Character:GetDescendants()) do
+if v:IsA("BasePart") then
+v.CanCollide=true
+end
+end
+end
+
+end
+
+toggle.MouseButton1Click:Connect(function()
+
+noclip=not noclip
+
+if noclip then
+toggle.Text="Disable Noclip"
+start()
+else
+toggle.Text="Enable Noclip"
+stop()
+end
+
+end)
+
+close.MouseButton1Click:Connect(function()
+stop()
+gui:Destroy()
+end)
+
 end}
 
 }
@@ -182,23 +239,18 @@ frame.Position=UDim2.new(0.05,0,0.3,0)
 frame.BackgroundColor3=Color3.fromRGB(18,18,18)
 frame.Active=true
 frame.Draggable=true
-Instance.new("UICorner",frame)
 
 local title=Instance.new("TextLabel",frame)
 title.Size=UDim2.new(1,0,0,40)
 title.Text="Leo1333877's Script Hub"
 title.TextColor3=Color3.new(1,1,1)
 title.BackgroundColor3=Color3.fromRGB(25,25,25)
-title.Font=Enum.Font.GothamBold
-title.TextSize=16
 
 local close=Instance.new("TextButton",frame)
 close.Size=UDim2.new(0,30,0,30)
 close.Position=UDim2.new(1,-35,0,5)
 close.Text="X"
 close.BackgroundColor3=Color3.fromRGB(120,30,30)
-close.TextColor3=Color3.new(1,1,1)
-Instance.new("UICorner",close)
 
 close.MouseButton1Click:Connect(function()
 gui:Destroy()
@@ -212,7 +264,6 @@ search.Text=""
 search.ClearTextOnFocus=false
 search.BackgroundColor3=Color3.fromRGB(35,35,35)
 search.TextColor3=Color3.new(1,1,1)
-Instance.new("UICorner",search)
 
 local scroll=Instance.new("ScrollingFrame",frame)
 scroll.Size=UDim2.new(0.9,0,0.7,0)
@@ -246,26 +297,12 @@ for i,v in pairs(scripts) do
 local holder=Instance.new("Frame",scroll)
 holder.Size=UDim2.new(1,0,0,36)
 holder.BackgroundColor3=Color3.fromRGB(30,30,30)
-Instance.new("UICorner",holder)
 
 local run=Instance.new("TextButton",holder)
-run.Size=UDim2.new(0.8,0,1,0)
+run.Size=UDim2.new(1,0,1,0)
 run.Text=v.name
 run.BackgroundColor3=Color3.fromRGB(40,40,40)
 run.TextColor3=Color3.new(1,1,1)
-Instance.new("UICorner",run)
-
-local fav=Instance.new("TextButton",holder)
-fav.Size=UDim2.new(0.2,0,1,0)
-fav.Position=UDim2.new(0.8,0,0,0)
-fav.Text="☆"
-fav.TextColor3=Color3.fromRGB(255,215,0)
-fav.BackgroundColor3=Color3.fromRGB(30,30,30)
-
-fav.MouseButton1Click:Connect(function()
-v.fav=not v.fav
-fav.Text=v.fav and "★" or "☆"
-end)
 
 run.MouseButton1Click:Connect(v.run)
 
