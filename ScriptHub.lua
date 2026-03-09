@@ -37,34 +37,28 @@ local scripts = {
         local hrp = char:WaitForChild("HumanoidRootPart")
         local flying, speed, move = false, 60, Vector3.zero
         local bv, bg, conn
-
         local gui = Instance.new("ScreenGui", game.CoreGui)
         local frame = Instance.new("Frame", gui)
         frame.Size, frame.Position = UDim2.new(0, 220, 0, 120), UDim2.new(0.5, -110, 0.5, -60)
         frame.BackgroundColor3, frame.Active = Color3.fromRGB(20, 20, 20), true
         Instance.new("UICorner", frame)
         makeDraggable(frame)
-
         local close = Instance.new("TextButton", frame)
         close.Size, close.Position, close.Text = UDim2.new(0, 25, 0, 25), UDim2.new(1, -30, 0, 5), "X"
         close.BackgroundColor3, close.TextColor3 = Color3.fromRGB(120, 30, 30), Color3.new(1, 1, 1)
         Instance.new("UICorner", close)
-
         local speedBox = Instance.new("TextBox", frame)
         speedBox.Size, speedBox.Position = UDim2.new(0.8, 0, 0, 30), UDim2.new(0.1, 0, 0.25, 0)
         speedBox.PlaceholderText, speedBox.Text = "Speed", ""
         speedBox.BackgroundColor3, speedBox.TextColor3 = Color3.fromRGB(35, 35, 35), Color3.new(1, 1, 1)
         Instance.new("UICorner", speedBox)
-
         local toggle = Instance.new("TextButton", frame)
         toggle.Size, toggle.Position, toggle.Text = UDim2.new(0.8, 0, 0, 30), UDim2.new(0.1, 0, 0.65, 0), "Start Fly"
         toggle.BackgroundColor3, toggle.TextColor3 = Color3.fromRGB(40, 40, 40), Color3.new(1, 1, 1)
         Instance.new("UICorner", toggle)
-
         speedBox:GetPropertyChangedSignal("Text"):Connect(function()
             speedBox.Text = speedBox.Text:gsub("[^%d%.]", "")
         end)
-
         local bIn = UIS.InputBegan:Connect(function(i, g)
             if g then return end
             if i.KeyCode == Enum.KeyCode.W then move += Vector3.new(0, 0, -1) end
@@ -74,7 +68,6 @@ local scripts = {
             if i.KeyCode == Enum.KeyCode.Space then move += Vector3.new(0, 1, 0) end
             if i.KeyCode == Enum.KeyCode.LeftShift then move += Vector3.new(0, -1, 0) end
         end)
-
         local bOut = UIS.InputEnded:Connect(function(i)
             if i.KeyCode == Enum.KeyCode.W then move -= Vector3.new(0, 0, -1) end
             if i.KeyCode == Enum.KeyCode.S then move -= Vector3.new(0, 0, 1) end
@@ -83,7 +76,6 @@ local scripts = {
             if i.KeyCode == Enum.KeyCode.Space then move -= Vector3.new(0, 1, 0) end
             if i.KeyCode == Enum.KeyCode.LeftShift then move -= Vector3.new(0, -1, 0) end
         end)
-
         toggle.MouseButton1Click:Connect(function()
             flying = not flying
             toggle.Text = flying and "Stop Fly" or "Start Fly"
@@ -100,11 +92,10 @@ local scripts = {
                 end)
             else
                 if conn then conn:Disconnect() end
-                if bv then bv.Parent = nil end
-                if bg then bg.Parent = nil end
+                if bv then bv:Destroy() end
+                if bg then bg:Destroy() end
             end
         end)
-
         close.MouseButton1Click:Connect(function()
             if conn then conn:Disconnect() end
             if bv then bv:Destroy() end
@@ -122,29 +113,24 @@ local scripts = {
         frame.BackgroundColor3, frame.Active = Color3.fromRGB(20, 20, 20), true
         Instance.new("UICorner", frame)
         makeDraggable(frame)
-
         local speedInput = Instance.new("TextBox", frame)
         speedInput.Size, speedInput.Position = UDim2.new(0.8, 0, 0, 35), UDim2.new(0.1, 0, 0.2, 0)
         speedInput.PlaceholderText, speedInput.Text = "Speed (Decimals)", ""
         speedInput.BackgroundColor3, speedInput.TextColor3 = Color3.fromRGB(35, 35, 35), Color3.new(1, 1, 1)
         Instance.new("UICorner", speedInput)
-
         local toggle = Instance.new("TextButton", frame)
         toggle.Size, toggle.Position = UDim2.new(0.8, 0, 0, 40), UDim2.new(0.1, 0, 0.55, 0)
         toggle.Text, toggle.BackgroundColor3, toggle.TextColor3 = "Enable Speed", Color3.fromRGB(40, 40, 40), Color3.new(1, 1, 1)
         Instance.new("UICorner", toggle)
-
         local close = Instance.new("TextButton", frame)
         close.Size, close.Position, close.Text = UDim2.new(0, 25, 0, 25), UDim2.new(1, -30, 0, 5), "X"
         close.BackgroundColor3, close.TextColor3 = Color3.fromRGB(120, 30, 30), Color3.new(1, 1, 1)
         Instance.new("UICorner", close)
-
         local loop = RunService.Heartbeat:Connect(function()
             if active and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
                 LocalPlayer.Character.Humanoid.WalkSpeed = tonumber(speedInput.Text) or 16
             end
         end)
-
         toggle.MouseButton1Click:Connect(function()
             active = not active
             toggle.Text = active and "Disable Speed" or "Enable Speed"
@@ -152,7 +138,6 @@ local scripts = {
                 LocalPlayer.Character.Humanoid.WalkSpeed = 16
             end
         end)
-
         close.MouseButton1Click:Connect(function()
             active = false
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = 16 end
@@ -169,17 +154,14 @@ local scripts = {
         frame.BackgroundColor3, frame.Active = Color3.fromRGB(20, 20, 20), true
         Instance.new("UICorner", frame)
         makeDraggable(frame)
-
         local toggle = Instance.new("TextButton", frame)
         toggle.Size, toggle.Position = UDim2.new(0.8, 0, 0, 35), UDim2.new(0.1, 0, 0.45, 0)
         toggle.Text, toggle.BackgroundColor3, toggle.TextColor3 = "Enable Noclip", Color3.fromRGB(40, 40, 40), Color3.new(1, 1, 1)
         Instance.new("UICorner", toggle)
-
         local close = Instance.new("TextButton", frame)
         close.Size, close.Position, close.Text = UDim2.new(0, 25, 0, 25), UDim2.new(1, -30, 0, 5), "X"
         close.BackgroundColor3, close.TextColor3 = Color3.fromRGB(120, 30, 30), Color3.new(1, 1, 1)
         Instance.new("UICorner", close)
-
         toggle.MouseButton1Click:Connect(function()
             noclip = not noclip
             toggle.Text = noclip and "Disable Noclip" or "Enable Noclip"
@@ -200,10 +182,8 @@ local scripts = {
                 end
             end
         end)
-
         close.MouseButton1Click:Connect(function() if connection then connection:Disconnect() end gui:Destroy() end)
     end},
-
     {name="Freecam",fav=false,run=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Leo12345111/Freecam/main/Freecam.lua"))() end},
     {name="Touch Fling",fav=false,run=function() loadstring(game:HttpGet("https://pastebin.com/raw/LgZwZ7ZB"))() end},
     {name="Player Follower",fav=false,run=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Leo12345111/PlayerFollower/main/PlayerFollower.lua"))() end},
@@ -237,19 +217,43 @@ Instance.new("UICorner", search)
 local scroll = Instance.new("ScrollingFrame", mainFrame)
 scroll.Size, scroll.Position = UDim2.new(0.9, 0, 0.7, 0), UDim2.new(0.05, 0, 0.22, 0)
 scroll.BackgroundTransparency, scroll.ScrollBarThickness = 1, 6
-Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 6)
+local listLayout = Instance.new("UIListLayout", scroll)
+listLayout.Padding = UDim.new(0, 6)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local buttons = {}
-for i, v in pairs(scripts) do
-    local holder = Instance.new("Frame", scroll)
-    holder.Size, holder.BackgroundColor3 = UDim2.new(1, 0, 0, 36), Color3.fromRGB(30, 30, 30)
-    Instance.new("UICorner", holder)
-    local run = Instance.new("TextButton", holder)
-    run.Size, run.Text, run.BackgroundTransparency = UDim2.new(1, 0, 1, 0), v.name, 1
-    run.TextColor3 = Color3.new(1, 1, 1)
-    run.MouseButton1Click:Connect(v.run)
-    buttons[i] = holder
+local function createButtons()
+    for _, b in pairs(buttons) do b:Destroy() end
+    table.clear(buttons)
+    
+    for i, v in pairs(scripts) do
+        local holder = Instance.new("Frame", scroll)
+        holder.Size, holder.BackgroundColor3 = UDim2.new(1, 0, 0, 36), Color3.fromRGB(30, 30, 30)
+        holder.LayoutOrder = v.fav and 0 or 1
+        Instance.new("UICorner", holder)
+        
+        local run = Instance.new("TextButton", holder)
+        run.Size, run.Text, run.BackgroundTransparency = UDim2.new(0.8, 0, 1, 0), v.name, 1
+        run.TextColor3, run.TextXAlignment = Color3.new(1, 1, 1), Enum.TextXAlignment.Left
+        run.Position = UDim2.new(0.05, 0, 0, 0)
+        run.MouseButton1Click:Connect(v.run)
+        
+        local favBtn = Instance.new("TextButton", holder)
+        favBtn.Size, favBtn.Position = UDim2.new(0, 30, 0, 30), UDim2.new(1, -35, 0, 3)
+        favBtn.Text = v.fav and "★" or "☆"
+        favBtn.BackgroundColor3 = v.fav and Color3.fromRGB(200, 150, 0) or Color3.fromRGB(45, 45, 45)
+        favBtn.TextColor3 = Color3.new(1, 1, 1)
+        Instance.new("UICorner", favBtn)
+        
+        favBtn.MouseButton1Click:Connect(function()
+            v.fav = not v.fav
+            createButtons()
+        end)
+        
+        buttons[i] = holder
+    end
 end
+createButtons()
 
 search:GetPropertyChangedSignal("Text"):Connect(function()
     for i, v in pairs(scripts) do
