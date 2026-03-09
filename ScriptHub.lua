@@ -66,7 +66,7 @@ close.TextColor3 = Color3.new(1,1,1)
 Instance.new("UICorner",close)
 
 close.MouseButton1Click:Connect(function()
-    gui.Enabled = false
+    gui:Destroy()
 end)
 
 local search = Instance.new("TextBox")
