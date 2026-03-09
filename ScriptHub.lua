@@ -32,33 +32,37 @@ end
 
 local scripts = {
     {name = "Fly", fav = false, run = function()
-        local player = Players.LocalPlayer
-        local char = player.Character or player.CharacterAdded:Wait()
-        local hrp = char:WaitForChild("HumanoidRootPart")
         local flying, speed, move = false, 60, Vector3.zero
         local bv, bg, conn
+
         local gui = Instance.new("ScreenGui", game.CoreGui)
+        gui.ResetOnSpawn = false
         local frame = Instance.new("Frame", gui)
         frame.Size, frame.Position = UDim2.new(0, 220, 0, 120), UDim2.new(0.5, -110, 0.5, -60)
         frame.BackgroundColor3, frame.Active = Color3.fromRGB(20, 20, 20), true
         Instance.new("UICorner", frame)
         makeDraggable(frame)
+
         local close = Instance.new("TextButton", frame)
         close.Size, close.Position, close.Text = UDim2.new(0, 25, 0, 25), UDim2.new(1, -30, 0, 5), "X"
         close.BackgroundColor3, close.TextColor3 = Color3.fromRGB(120, 30, 30), Color3.new(1, 1, 1)
         Instance.new("UICorner", close)
+
         local speedBox = Instance.new("TextBox", frame)
         speedBox.Size, speedBox.Position = UDim2.new(0.8, 0, 0, 30), UDim2.new(0.1, 0, 0.25, 0)
-        speedBox.PlaceholderText, speedBox.Text = "Speed", ""
+        speedBox.PlaceholderText, speedBox.Text = "Speed", "60"
         speedBox.BackgroundColor3, speedBox.TextColor3 = Color3.fromRGB(35, 35, 35), Color3.new(1, 1, 1)
         Instance.new("UICorner", speedBox)
+
         local toggle = Instance.new("TextButton", frame)
         toggle.Size, toggle.Position, toggle.Text = UDim2.new(0.8, 0, 0, 30), UDim2.new(0.1, 0, 0.65, 0), "Start Fly"
         toggle.BackgroundColor3, toggle.TextColor3 = Color3.fromRGB(40, 40, 40), Color3.new(1, 1, 1)
         Instance.new("UICorner", toggle)
+
         speedBox:GetPropertyChangedSignal("Text"):Connect(function()
             speedBox.Text = speedBox.Text:gsub("[^%d%.]", "")
         end)
+
         local bIn = UIS.InputBegan:Connect(function(i, g)
             if g then return end
             if i.KeyCode == Enum.KeyCode.W then move += Vector3.new(0, 0, -1) end
@@ -68,6 +72,7 @@ local scripts = {
             if i.KeyCode == Enum.KeyCode.Space then move += Vector3.new(0, 1, 0) end
             if i.KeyCode == Enum.KeyCode.LeftShift then move += Vector3.new(0, -1, 0) end
         end)
+
         local bOut = UIS.InputEnded:Connect(function(i)
             if i.KeyCode == Enum.KeyCode.W then move -= Vector3.new(0, 0, -1) end
             if i.KeyCode == Enum.KeyCode.S then move -= Vector3.new(0, 0, 1) end
@@ -76,27 +81,32 @@ local scripts = {
             if i.KeyCode == Enum.KeyCode.Space then move -= Vector3.new(0, 1, 0) end
             if i.KeyCode == Enum.KeyCode.LeftShift then move -= Vector3.new(0, -1, 0) end
         end)
+
+        conn = RunService.RenderStepped:Connect(function()
+            if flying and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = LocalPlayer.Character.HumanoidRootPart
+                if not bv or bv.Parent ~= hrp then
+                    bv = Instance.new("BodyVelocity", hrp)
+                    bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+                    bg = Instance.new("BodyGyro", hrp)
+                    bg.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+                end
+                speed = tonumber(speedBox.Text) or speed
+                bv.Velocity = workspace.CurrentCamera.CFrame:VectorToWorldSpace(move) * speed
+                bg.CFrame = workspace.CurrentCamera.CFrame
+            else
+                if bv then bv:Destroy() bv = nil end
+                if bg then bg:Destroy() bg = nil end
+            end
+        end)
+
         toggle.MouseButton1Click:Connect(function()
             flying = not flying
             toggle.Text = flying and "Stop Fly" or "Start Fly"
-            if flying then
-                speed = tonumber(speedBox.Text) or 60
-                bv = Instance.new("BodyVelocity", hrp)
-                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-                bg = Instance.new("BodyGyro", hrp)
-                bg.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
-                conn = RunService.RenderStepped:Connect(function()
-                    speed = tonumber(speedBox.Text) or speed
-                    bv.Velocity = workspace.CurrentCamera.CFrame:VectorToWorldSpace(move) * speed
-                    bg.CFrame = workspace.CurrentCamera.CFrame
-                end)
-            else
-                if conn then conn:Disconnect() end
-                if bv then bv:Destroy() end
-                if bg then bg:Destroy() end
-            end
         end)
+
         close.MouseButton1Click:Connect(function()
+            flying = false
             if conn then conn:Disconnect() end
             if bv then bv:Destroy() end
             if bg then bg:Destroy() end
@@ -108,6 +118,7 @@ local scripts = {
     {name = "WalkSpeed", fav = false, run = function()
         local active = false
         local gui = Instance.new("ScreenGui", game.CoreGui)
+        gui.ResetOnSpawn = false
         local frame = Instance.new("Frame", gui)
         frame.Size, frame.Position = UDim2.new(0, 200, 0, 140), UDim2.new(0.5, -100, 0.5, -70)
         frame.BackgroundColor3, frame.Active = Color3.fromRGB(20, 20, 20), true
@@ -115,7 +126,7 @@ local scripts = {
         makeDraggable(frame)
         local speedInput = Instance.new("TextBox", frame)
         speedInput.Size, speedInput.Position = UDim2.new(0.8, 0, 0, 35), UDim2.new(0.1, 0, 0.2, 0)
-        speedInput.PlaceholderText, speedInput.Text = "Speed", ""
+        speedInput.PlaceholderText, speedInput.Text = "Speed (Decimals)", "16"
         speedInput.BackgroundColor3, speedInput.TextColor3 = Color3.fromRGB(35, 35, 35), Color3.new(1, 1, 1)
         Instance.new("UICorner", speedInput)
         local toggle = Instance.new("TextButton", frame)
@@ -134,21 +145,18 @@ local scripts = {
         toggle.MouseButton1Click:Connect(function()
             active = not active
             toggle.Text = active and "Disable Speed" or "Enable Speed"
-            if not active and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                LocalPlayer.Character.Humanoid.WalkSpeed = 16
-            end
         end)
         close.MouseButton1Click:Connect(function()
             active = false
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = 16 end
             loop:Disconnect()
             gui:Destroy()
         end)
     end},
 
     {name = "Noclip", fav = false, run = function()
-        local noclip, connection = false, nil
+        local noclip = false
         local gui = Instance.new("ScreenGui", game.CoreGui)
+        gui.ResetOnSpawn = false
         local frame = Instance.new("Frame", gui)
         frame.Size, frame.Position = UDim2.new(0, 200, 0, 100), UDim2.new(0.5, -100, 0.5, -50)
         frame.BackgroundColor3, frame.Active = Color3.fromRGB(20, 20, 20), true
@@ -162,27 +170,18 @@ local scripts = {
         close.Size, close.Position, close.Text = UDim2.new(0, 25, 0, 25), UDim2.new(1, -30, 0, 5), "X"
         close.BackgroundColor3, close.TextColor3 = Color3.fromRGB(120, 30, 30), Color3.new(1, 1, 1)
         Instance.new("UICorner", close)
-        toggle.MouseButton1Click:Connect(function()
-            noclip = not noclip
-            toggle.Text = noclip and "Disable Noclip" or "Enable Noclip"
-            if noclip then
-                connection = RunService.Stepped:Connect(function()
-                    if LocalPlayer.Character then
-                        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
-                            if v:IsA("BasePart") then v.CanCollide = false end
-                        end
-                    end
-                end)
-            else
-                if connection then connection:Disconnect() end
-                if LocalPlayer.Character then
-                    for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
-                        if v:IsA("BasePart") then v.CanCollide = true end
-                    end
+        local connection = RunService.Stepped:Connect(function()
+            if noclip and LocalPlayer.Character then
+                for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+                    if v:IsA("BasePart") then v.CanCollide = false end
                 end
             end
         end)
-        close.MouseButton1Click:Connect(function() if connection then connection:Disconnect() end gui:Destroy() end)
+        toggle.MouseButton1Click:Connect(function()
+            noclip = not noclip
+            toggle.Text = noclip and "Disable Noclip" or "Enable Noclip"
+        end)
+        close.MouseButton1Click:Connect(function() noclip = false connection:Disconnect() gui:Destroy() end)
     end},
     {name="Freecam",fav=false,run=function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Leo12345111/Freecam/main/Freecam.lua"))() end},
     {name="Touch Fling",fav=false,run=function() loadstring(game:HttpGet("https://pastebin.com/raw/LgZwZ7ZB"))() end},
@@ -191,6 +190,7 @@ local scripts = {
 }
 
 local mainGui = Instance.new("ScreenGui", game.CoreGui)
+mainGui.ResetOnSpawn = false
 local mainFrame = Instance.new("Frame", mainGui)
 mainFrame.Size, mainFrame.Position = UDim2.new(0, 300, 0, 420), UDim2.new(0.05, 0, 0.3, 0)
 mainFrame.BackgroundColor3, mainFrame.Active = Color3.fromRGB(18, 18, 18), true
@@ -225,50 +225,35 @@ local buttons = {}
 local function createButtons()
     for _, b in pairs(buttons) do b:Destroy() end
     table.clear(buttons)
-    
     for i, v in pairs(scripts) do
         local holder = Instance.new("Frame", scroll)
         holder.Size, holder.BackgroundColor3 = UDim2.new(1, 0, 0, 36), Color3.fromRGB(30, 30, 30)
         holder.LayoutOrder = v.fav and 0 or 1
         Instance.new("UICorner", holder)
-        
         local run = Instance.new("TextButton", holder)
         run.Size, run.Text, run.BackgroundTransparency = UDim2.new(0.8, 0, 1, 0), v.name, 1
         run.TextColor3, run.TextXAlignment = Color3.new(1, 1, 1), Enum.TextXAlignment.Left
         run.Position = UDim2.new(0.05, 0, 0, 0)
         run.MouseButton1Click:Connect(v.run)
-        
         local favBtn = Instance.new("TextButton", holder)
         favBtn.Size, favBtn.Position = UDim2.new(0, 30, 0, 30), UDim2.new(1, -35, 0, 3)
         favBtn.Text = v.fav and "★" or "☆"
         favBtn.BackgroundColor3 = v.fav and Color3.fromRGB(200, 150, 0) or Color3.fromRGB(45, 45, 45)
         favBtn.TextColor3 = Color3.new(1, 1, 1)
         Instance.new("UICorner", favBtn)
-        
-        favBtn.MouseButton1Click:Connect(function()
-            v.fav = not v.fav
-            createButtons()
-        end)
-        
+        favBtn.MouseButton1Click:Connect(function() v.fav = not v.fav createButtons() end)
         buttons[i] = holder
     end
 end
 createButtons()
 
 search:GetPropertyChangedSignal("Text"):Connect(function()
-    for i, v in pairs(scripts) do
-        buttons[i].Visible = string.find(v.name:lower(), search.Text:lower()) ~= nil
-    end
+    for i, v in pairs(scripts) do buttons[i].Visible = string.find(v.name:lower(), search.Text:lower()) ~= nil end
 end)
 
 local shiftHeld = false
 RunService.RenderStepped:Connect(function()
     if UIS:IsKeyDown(Enum.KeyCode.RightShift) then
-        if not shiftHeld then
-            shiftHeld = true
-            mainGui.Enabled = not mainGui.Enabled
-        end
-    else
-        shiftHeld = false
-    end
+        if not shiftHeld then shiftHeld = true mainGui.Enabled = not mainGui.Enabled end
+    else shiftHeld = false end
 end)
