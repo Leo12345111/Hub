@@ -4,9 +4,138 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
 local scripts = {
-    {name="Fly", fav=false, run=function()
-        loadstring(game:HttpGet("https://gist.githubusercontent.com/meozoneYT/bf037dff9f0a70017304ddd67fdcd370/raw/e14e74f425b060df523343cf30b787074eb3c5d2/arceus%2520x%2520fly%25202%2520obflucator"))()
-    end},
+    {name="Fly",fav=false,run=function()
+    
+    local Players=game:GetService("Players")
+    local UIS=game:GetService("UserInputService")
+    local RunService=game:GetService("RunService")
+    
+    local player=Players.LocalPlayer
+    local char=player.Character or player.CharacterAdded:Wait()
+    local hrp=char:WaitForChild("HumanoidRootPart")
+    
+    local flying=false
+    local speed=60
+    local move=Vector3.zero
+    
+    local bv
+    local bg
+    local conn
+    
+    local gui=Instance.new("ScreenGui")
+    gui.Parent=game.CoreGui
+    
+    local frame=Instance.new("Frame")
+    frame.Size=UDim2.new(0,220,0,130)
+    frame.Position=UDim2.new(0.5,-110,0.5,-65)
+    frame.BackgroundColor3=Color3.fromRGB(20,20,20)
+    frame.Active=true
+    frame.Draggable=true
+    frame.Parent=gui
+    Instance.new("UICorner",frame)
+    
+    local close=Instance.new("TextButton")
+    close.Size=UDim2.new(0,25,0,25)
+    close.Position=UDim2.new(1,-30,0,5)
+    close.Text="X"
+    close.BackgroundColor3=Color3.fromRGB(120,30,30)
+    close.TextColor3=Color3.new(1,1,1)
+    close.Parent=frame
+    Instance.new("UICorner",close)
+    
+    local speedBox=Instance.new("TextBox")
+    speedBox.Size=UDim2.new(0.8,0,0,30)
+    speedBox.Position=UDim2.new(0.1,0,0.25,0)
+    speedBox.Text="60"
+    speedBox.PlaceholderText="Speed"
+    speedBox.BackgroundColor3=Color3.fromRGB(35,35,35)
+    speedBox.TextColor3=Color3.new(1,1,1)
+    speedBox.Parent=frame
+    Instance.new("UICorner",speedBox)
+    
+    local toggle=Instance.new("TextButton")
+    toggle.Size=UDim2.new(0.8,0,0,30)
+    toggle.Position=UDim2.new(0.1,0,0.65,0)
+    toggle.Text="Toggle Fly"
+    toggle.BackgroundColor3=Color3.fromRGB(40,40,40)
+    toggle.TextColor3=Color3.new(1,1,1)
+    toggle.Parent=frame
+    Instance.new("UICorner",toggle)
+    
+    UIS.InputBegan:Connect(function(i,g)
+    if g then return end
+    if i.KeyCode==Enum.KeyCode.W then move+=Vector3.new(0,0,-1) end
+    if i.KeyCode==Enum.KeyCode.S then move+=Vector3.new(0,0,1) end
+    if i.KeyCode==Enum.KeyCode.A then move+=Vector3.new(-1,0,0) end
+    if i.KeyCode==Enum.KeyCode.D then move+=Vector3.new(1,0,0) end
+    if i.KeyCode==Enum.KeyCode.Space then move+=Vector3.new(0,1,0) end
+    if i.KeyCode==Enum.KeyCode.LeftShift then move+=Vector3.new(0,-1,0) end
+    end)
+    
+    UIS.InputEnded:Connect(function(i)
+    if i.KeyCode==Enum.KeyCode.W then move-=Vector3.new(0,0,-1) end
+    if i.KeyCode==Enum.KeyCode.S then move-=Vector3.new(0,0,1) end
+    if i.KeyCode==Enum.KeyCode.A then move-=Vector3.new(-1,0,0) end
+    if i.KeyCode==Enum.KeyCode.D then move-=Vector3.new(1,0,0) end
+    if i.KeyCode==Enum.KeyCode.Space then move-=Vector3.new(0,1,0) end
+    if i.KeyCode==Enum.KeyCode.LeftShift then move-=Vector3.new(0,-1,0) end
+    end)
+    
+    local function startFly()
+    
+    speed=tonumber(speedBox.Text) or 60
+    
+    bv=Instance.new("BodyVelocity")
+    bv.MaxForce=Vector3.new(1e6,1e6,1e6)
+    bv.Velocity=Vector3.zero
+    bv.Parent=hrp
+    
+    bg=Instance.new("BodyGyro")
+    bg.MaxTorque=Vector3.new(1e6,1e6,1e6)
+    bg.P=1e4
+    bg.CFrame=workspace.CurrentCamera.CFrame
+    bg.Parent=hrp
+    
+    conn=RunService.RenderStepped:Connect(function()
+    
+    speed=tonumber(speedBox.Text) or speed
+    
+    local cam=workspace.CurrentCamera
+    local dir=cam.CFrame:VectorToWorldSpace(move)
+    
+    bv.Velocity=dir*speed
+    bg.CFrame=cam.CFrame
+    
+    end)
+    
+    end
+    
+    local function stopFly()
+    
+    if conn then conn:Disconnect() end
+    if bv then bv:Destroy() end
+    if bg then bg:Destroy() end
+    
+    end
+    
+    toggle.MouseButton1Click:Connect(function()
+    
+    flying=not flying
+    
+    if flying then
+    startFly()
+    else
+    stopFly()
+    end
+    
+    end)
+    
+    close.MouseButton1Click:Connect(function()
+    stopFly()
+    gui:Destroy()
+    end)
+    
+    end}
     {name="Freecam", fav=false, run=function()
         loadstring(game:HttpGet("https://raw.githubusercontent.com/Leo12345111/Freecam/main/Freecam.lua"))()
     end},
