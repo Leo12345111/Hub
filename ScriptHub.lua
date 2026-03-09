@@ -115,7 +115,7 @@ local scripts = {
         makeDraggable(frame)
         local speedInput = Instance.new("TextBox", frame)
         speedInput.Size, speedInput.Position = UDim2.new(0.8, 0, 0, 35), UDim2.new(0.1, 0, 0.2, 0)
-        speedInput.PlaceholderText, speedInput.Text = "Speed (Decimals)", ""
+        speedInput.PlaceholderText, speedInput.Text = "Speed", ""
         speedInput.BackgroundColor3, speedInput.TextColor3 = Color3.fromRGB(35, 35, 35), Color3.new(1, 1, 1)
         Instance.new("UICorner", speedInput)
         local toggle = Instance.new("TextButton", frame)
