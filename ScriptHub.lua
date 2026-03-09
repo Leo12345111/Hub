@@ -39,8 +39,9 @@ Instance.new("UICorner",close)
 local speedBox=Instance.new("TextBox",frame)
 speedBox.Size=UDim2.new(0.8,0,0,30)
 speedBox.Position=UDim2.new(0.1,0,0.25,0)
-speedBox.Text="60"
+speedBox.Text=""
 speedBox.PlaceholderText="Speed"
+speedBox.ClearTextOnFocus=false
 speedBox.BackgroundColor3=Color3.fromRGB(35,35,35)
 speedBox.TextColor3=Color3.new(1,1,1)
 Instance.new("UICorner",speedBox)
@@ -54,9 +55,18 @@ toggle.TextColor3=Color3.new(1,1,1)
 Instance.new("UICorner",toggle)
 
 speedBox:GetPropertyChangedSignal("Text"):Connect(function()
+
 local text=speedBox.Text
+
+if text=="TextBox" then
+speedBox.Text=""
+return
+end
+
 text=text:gsub("[^%d%.]","")
+
 speedBox.Text=text
+
 end)
 
 UIS.InputBegan:Connect(function(i,g)
@@ -134,23 +144,23 @@ end)
 
 end},
 
-{name="Freecam", fav=false, run=function()
+{name="Freecam",fav=false,run=function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Leo12345111/Freecam/main/Freecam.lua"))()
 end},
 
-{name="Touch Fling", fav=false, run=function()
+{name="Touch Fling",fav=false,run=function()
 loadstring(game:HttpGet("https://pastebin.com/raw/LgZwZ7ZB"))()
 end},
 
-{name="Player Follower", fav=false, run=function()
+{name="Player Follower",fav=false,run=function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Leo12345111/PlayerFollower/main/PlayerFollower.lua"))()
 end},
 
-{name="Fling Players", fav=false, run=function()
+{name="Fling Players",fav=false,run=function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/K1LAS1K/Ultimate-Fling-GUI/main/flingscript.lua"))()
 end},
 
-{name="Noclip", fav=false, run=function()
+{name="Noclip",fav=false,run=function()
 RunService.Stepped:Connect(function()
 if LocalPlayer.Character then
 for _,v in pairs(LocalPlayer.Character:GetDescendants()) do
@@ -198,6 +208,8 @@ local search=Instance.new("TextBox",frame)
 search.Size=UDim2.new(0.7,0,0,30)
 search.Position=UDim2.new(0.05,0,0,50)
 search.PlaceholderText="Search Scripts..."
+search.Text=""
+search.ClearTextOnFocus=false
 search.BackgroundColor3=Color3.fromRGB(35,35,35)
 search.TextColor3=Color3.new(1,1,1)
 Instance.new("UICorner",search)
@@ -214,9 +226,11 @@ layout.Padding=UDim.new(0,6)
 local buttons={}
 
 local function refresh(filter)
+
 for i,v in pairs(buttons) do
 v.Visible=true
 end
+
 if filter~="" then
 for i,v in pairs(scripts) do
 if not string.find(string.lower(v.name),string.lower(filter)) then
@@ -224,6 +238,7 @@ buttons[i].Visible=false
 end
 end
 end
+
 end
 
 for i,v in pairs(scripts) do
@@ -259,7 +274,16 @@ table.insert(buttons,holder)
 end
 
 search:GetPropertyChangedSignal("Text"):Connect(function()
-refresh(search.Text)
+
+local text=search.Text
+
+if text=="TextBox" then
+search.Text=""
+return
+end
+
+refresh(text)
+
 end)
 
 local shiftHeld=false
