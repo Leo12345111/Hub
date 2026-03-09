@@ -179,13 +179,19 @@ clear.MouseButton1Click:Connect(function()
     refresh("")
 end)
 
-local toggleCooldown = false
-UIS.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.RightShift and not toggleCooldown then
-        toggleCooldown = true
-        gui.Enabled = not gui.Enabled
-        task.wait(0.2)
-        toggleCooldown = false
+local shiftHeld = false
+local debounce = false
+RunService.RenderStepped:Connect(function()
+    if not gui.Parent then return end
+    if UIS:IsKeyDown(Enum.KeyCode.RightShift) then
+        if not shiftHeld and not debounce then
+            shiftHeld = true
+            debounce = true
+            gui.Enabled = not gui.Enabled
+            task.wait(0.2)
+            debounce = false
+        end
+    else
+        shiftHeld = false
     end
 end)
