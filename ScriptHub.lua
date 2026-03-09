@@ -25,7 +25,6 @@ end},
 loadstring(game:HttpGet("https://raw.githubusercontent.com/K1LAS1K/Ultimate-Fling-GUI/main/flingscript.lua"))()
 end},
 
--- Noclip Script
 {name="Noclip",fav=false,run=function()
 
 local Noclip = nil
