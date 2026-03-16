@@ -217,53 +217,97 @@ local scripts = {
 
     {name = "ESP", fav = false, run = function()
         local Camera = workspace.CurrentCamera
-        local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "ESPGui"
         ScreenGui.ResetOnSpawn = false
+        ScreenGui.Parent = game:GetService("CoreGui")
 
-        local MainFrame = Instance.new("Frame", ScreenGui)
+        local MainFrame = Instance.new("Frame")
+        MainFrame.Name = "MainFrame"
         MainFrame.Size = UDim2.new(0, 150, 0, 100)
         MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
         MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        MainFrame.BorderSizePixel = 2
         MainFrame.Active = true
+        MainFrame.Parent = ScreenGui
         makeDraggable(MainFrame)
 
-        local ToggleBtn = Instance.new("TextButton", MainFrame)
+        local Title = Instance.new("TextLabel")
+        Title.Size = UDim2.new(1, 0, 0, 30)
+        Title.BackgroundTransparency = 1
+        Title.Text = "ESP Settings"
+        Title.TextColor3 = Color3.new(1, 1, 1)
+        Title.Font = Enum.Font.SourceSansBold
+        Title.TextSize = 18
+        Title.Parent = MainFrame
+
+        local ToggleBtn = Instance.new("TextButton")
         ToggleBtn.Size = UDim2.new(0.8, 0, 0, 30)
         ToggleBtn.Position = UDim2.new(0.1, 0, 0.4, 0)
-        ToggleBtn.Text = "ESP: OFF"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        ToggleBtn.Text = "ESP: OFF"
         ToggleBtn.TextColor3 = Color3.new(1, 1, 1)
+        ToggleBtn.Parent = MainFrame
 
-        local ExitBtn = Instance.new("TextButton", MainFrame)
+        local ExitBtn = Instance.new("TextButton")
         ExitBtn.Size = UDim2.new(0, 20, 0, 20)
         ExitBtn.Position = UDim2.new(1, -25, 0, 5)
-        ExitBtn.Text = "X"
         ExitBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        ExitBtn.Text = "X"
+        ExitBtn.TextColor3 = Color3.new(1, 1, 1)
+        ExitBtn.Parent = MainFrame
 
         local ESPEnabled = false
         local Drawings = {}
 
         local function CreateESP(player)
-            if player == LocalPlayer then return end
-            local data = {
-                Box = Drawing.new("Square"),
-                NameText = Drawing.new("Text")
+            local box = Drawing.new("Square")
+            box.Visible = false
+            box.Color = Color3.new(1, 0, 0)
+            box.Thickness = 1
+            box.Filled = true
+            box.Transparency = 0.4
+
+            local outline = Drawing.new("Square")
+            outline.Visible = false
+            outline.Color = Color3.new(0, 0, 0)
+            outline.Thickness = 2
+            outline.Filled = false
+            outline.Transparency = 1
+
+            local healthBar = Drawing.new("Line")
+            healthBar.Visible = false
+            healthBar.Color = Color3.new(0, 1, 0)
+            healthBar.Thickness = 2
+
+            local healthText = Drawing.new("Text")
+            healthText.Visible = false
+            healthText.Color = Color3.new(1, 1, 1)
+            healthText.Size = 14
+            healthText.Center = false
+            healthText.Outline = true
+
+            local nameText = Drawing.new("Text")
+            nameText.Visible = false
+            nameText.Color = Color3.new(1, 1, 1)
+            nameText.Size = 16
+            nameText.Center = true
+            nameText.Outline = true
+
+            Drawings[player] = {
+                Box = box,
+                Outline = outline,
+                HealthBar = healthBar,
+                HealthText = healthText,
+                NameText = nameText
             }
-            data.Box.Visible = false
-            data.Box.Color = Color3.new(1, 0, 0)
-            data.Box.Thickness = 1
-            data.NameText.Visible = false
-            data.NameText.Color = Color3.new(1, 1, 1)
-            data.NameText.Size = 16
-            data.NameText.Center = true
-            data.NameText.Outline = true
-            Drawings[player] = data
         end
 
         local function RemoveESP(player)
             if Drawings[player] then
-                Drawings[player].Box:Remove()
-                Drawings[player].NameText:Remove()
+                for _, obj in pairs(Drawings[player]) do
+                    obj:Remove()
+                end
                 Drawings[player] = nil
             end
         end
@@ -271,38 +315,61 @@ local scripts = {
         ToggleBtn.MouseButton1Click:Connect(function()
             ESPEnabled = not ESPEnabled
             ToggleBtn.Text = ESPEnabled and "ESP: ON" or "ESP: OFF"
+            if not ESPEnabled then
+                for _, data in pairs(Drawings) do
+                    for _, obj in pairs(data) do
+                        obj.Visible = false
+                    end
+                end
+            end
         end)
 
         ExitBtn.MouseButton1Click:Connect(function()
             ScreenGui:Destroy()
-            for p, _ in pairs(Drawings) do RemoveESP(p) end
+            for player, _ in pairs(Drawings) do
+                RemoveESP(player)
+            end
         end)
 
         Players.PlayerAdded:Connect(CreateESP)
         Players.PlayerRemoving:Connect(RemoveESP)
-        for _, p in pairs(Players:GetPlayers()) do CreateESP(p) end
+
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then CreateESP(player) end
+        end
 
         RunService.RenderStepped:Connect(function()
+            if not ESPEnabled then return end
             for player, data in pairs(Drawings) do
-                local char = player.Character
-                if ESPEnabled and char and char:FindFirstChild("HumanoidRootPart") then
-                    local hrp = char.HumanoidRootPart
+                local character = player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid") then
+                    local hrp = character.HumanoidRootPart
+                    local humanoid = character.Humanoid
                     local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
                     if onScreen then
                         local size = Vector2.new(2000 / pos.Z, 2500 / pos.Z)
+                        local boxPos = Vector2.new(pos.X - size.X / 2, pos.Y - size.Y / 2)
                         data.Box.Size = size
-                        data.Box.Position = Vector2.new(pos.X - size.X / 2, pos.Y - size.Y / 2)
+                        data.Box.Position = boxPos
                         data.Box.Visible = true
-                        data.NameText.Position = Vector2.new(pos.X, pos.Y - size.Y / 2 - 20)
+                        data.Outline.Size = size
+                        data.Outline.Position = boxPos
+                        data.Outline.Visible = true
+                        data.NameText.Position = Vector2.new(pos.X, boxPos.Y - 20)
                         data.NameText.Text = player.Name
                         data.NameText.Visible = true
+                        local barHeight = size.Y * (humanoid.Health / humanoid.MaxHealth)
+                        data.HealthBar.From = Vector2.new(boxPos.X - 7, boxPos.Y + size.Y)
+                        data.HealthBar.To = Vector2.new(boxPos.X - 7, boxPos.Y + size.Y - barHeight)
+                        data.HealthBar.Visible = true
+                        data.HealthText.Position = Vector2.new(boxPos.X - 45, boxPos.Y + size.Y - barHeight - 7)
+                        data.HealthText.Text = "hp: " .. math.floor(humanoid.Health)
+                        data.HealthText.Visible = true
                     else
-                        data.Box.Visible = false
-                        data.NameText.Visible = false
+                        for _, obj in pairs(data) do obj.Visible = false end
                     end
                 else
-                    data.Box.Visible = false
-                    data.NameText.Visible = false
+                    for _, obj in pairs(data) do obj.Visible = false end
                 end
             end
         end)
