@@ -214,10 +214,7 @@ local scripts = {
             gui:Destroy() 
         end)
     end},
-    {
-    name = "ESP",
-    fav = false,
-    run = function()
+    {name = "ESP", fav = false, run = function()
         local Players = game:GetService("Players")
         local RunService = game:GetService("RunService")
         local UserInputService = game:GetService("UserInputService")
@@ -387,8 +384,7 @@ local scripts = {
                 end
             end
         end)
-    end
-}
+    end},
     {name="Freecam",fav=false,run=function() safeLoad("https://raw.githubusercontent.com/Leo12345111/Freecam/main/Freecam.lua") end},
     {name="Touch Fling",fav=false,run=function() safeLoad("https://pastebin.com/raw/LgZwZ7ZB") end},
     {name="Player Follower",fav=false,run=function() safeLoad("https://raw.githubusercontent.com/Leo12345111/PlayerFollower/main/PlayerFollower.lua") end},
