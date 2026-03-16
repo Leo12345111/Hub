@@ -214,10 +214,186 @@ local scripts = {
             gui:Destroy() 
         end)
     end},
+    {
+    name = "ESP",
+    fav = false,
+    run = function()
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local UserInputService = game:GetService("UserInputService")
+        local LocalPlayer = Players.LocalPlayer
+        local Camera = workspace.CurrentCamera
+
+        local ScreenGui = Instance.new("ScreenGui")
+        ScreenGui.Name = "ESPGui"
+        ScreenGui.ResetOnSpawn = false
+        ScreenGui.Parent = game:GetService("CoreGui")
+
+        local MainFrame = Instance.new("Frame")
+        MainFrame.Name = "MainFrame"
+        MainFrame.Size = UDim2.new(0, 150, 0, 100)
+        MainFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
+        MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        MainFrame.BorderSizePixel = 2
+        MainFrame.Active = true
+        MainFrame.Draggable = true
+        MainFrame.Parent = ScreenGui
+
+        local Title = Instance.new("TextLabel")
+        Title.Size = UDim2.new(1, 0, 0, 30)
+        Title.BackgroundTransparency = 1
+        Title.Text = "ESP Settings"
+        Title.TextColor3 = Color3.new(1, 1, 1)
+        Title.Font = Enum.Font.SourceSansBold
+        Title.TextSize = 18
+        Title.Parent = MainFrame
+
+        local ToggleBtn = Instance.new("TextButton")
+        ToggleBtn.Size = UDim2.new(0.8, 0, 0, 30)
+        ToggleBtn.Position = UDim2.new(0.1, 0, 0.4, 0)
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        ToggleBtn.Text = "ESP: OFF"
+        ToggleBtn.TextColor3 = Color3.new(1, 1, 1)
+        ToggleBtn.Parent = MainFrame
+
+        local ExitBtn = Instance.new("TextButton")
+        ExitBtn.Size = UDim2.new(0, 20, 0, 20)
+        ExitBtn.Position = UDim2.new(1, -25, 0, 5)
+        ExitBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+        ExitBtn.Text = "X"
+        ExitBtn.TextColor3 = Color3.new(1, 1, 1)
+        ExitBtn.Parent = MainFrame
+
+        local ESPEnabled = false
+        local Drawings = {}
+
+        local function CreateESP(player)
+            local box = Drawing.new("Square")
+            box.Visible = false
+            box.Color = Color3.new(1, 0, 0)
+            box.Thickness = 1
+            box.Filled = true
+            box.Transparency = 0.4
+
+            local outline = Drawing.new("Square")
+            outline.Visible = false
+            outline.Color = Color3.new(0, 0, 0)
+            outline.Thickness = 2
+            outline.Filled = false
+            outline.Transparency = 1
+
+            local healthBar = Drawing.new("Line")
+            healthBar.Visible = false
+            healthBar.Color = Color3.new(0, 1, 0)
+            healthBar.Thickness = 2
+
+            local healthText = Drawing.new("Text")
+            healthText.Visible = false
+            healthText.Color = Color3.new(1, 1, 1)
+            healthText.Size = 14
+            healthText.Center = false
+            healthText.Outline = true
+
+            local nameText = Drawing.new("Text")
+            nameText.Visible = false
+            nameText.Color = Color3.new(1, 1, 1)
+            nameText.Size = 16
+            nameText.Center = true
+            nameText.Outline = true
+
+            Drawings[player] = {
+                Box = box,
+                Outline = outline,
+                HealthBar = healthBar,
+                HealthText = healthText,
+                NameText = nameText
+            }
+        end
+
+        local function RemoveESP(player)
+            if Drawings[player] then
+                for _, obj in pairs(Drawings[player]) do
+                    obj:Remove()
+                end
+                Drawings[player] = nil
+            end
+        end
+
+        ToggleBtn.MouseButton1Click:Connect(function()
+            ESPEnabled = not ESPEnabled
+            ToggleBtn.Text = ESPEnabled and "ESP: ON" or "ESP: OFF"
+            if not ESPEnabled then
+                for _, data in pairs(Drawings) do
+                    for _, obj in pairs(data) do
+                        obj.Visible = false
+                    end
+                end
+            end
+        end)
+
+        ExitBtn.MouseButton1Click:Connect(function()
+            ScreenGui:Destroy()
+            for player, _ in pairs(Drawings) do
+                RemoveESP(player)
+            end
+        end)
+
+        Players.PlayerAdded:Connect(CreateESP)
+        Players.PlayerRemoving:Connect(RemoveESP)
+
+        for _, player in pairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer then CreateESP(player) end
+        end
+
+        RunService.RenderStepped:Connect(function()
+            if not ESPEnabled then return end
+
+            for player, data in pairs(Drawings) do
+                local character = player.Character
+                if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid") then
+                    local hrp = character.HumanoidRootPart
+                    local humanoid = character.Humanoid
+                    local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+
+                    if onScreen then
+                        local size = Vector2.new(2000 / pos.Z, 2500 / pos.Z)
+                        local boxPos = Vector2.new(pos.X - size.X / 2, pos.Y - size.Y / 2)
+
+                        data.Box.Size = size
+                        data.Box.Position = boxPos
+                        data.Box.Visible = true
+
+                        data.Outline.Size = size
+                        data.Outline.Position = boxPos
+                        data.Outline.Visible = true
+
+                        data.NameText.Position = Vector2.new(pos.X, boxPos.Y - 20)
+                        data.NameText.Text = player.Name
+                        data.NameText.Visible = true
+
+                        local barHeight = size.Y * (humanoid.Health / humanoid.MaxHealth)
+                        data.HealthBar.From = Vector2.new(boxPos.X - 7, boxPos.Y + size.Y)
+                        data.HealthBar.To = Vector2.new(boxPos.X - 7, boxPos.Y + size.Y - barHeight)
+                        data.HealthBar.Visible = true
+
+                        data.HealthText.Position = Vector2.new(boxPos.X - 45, boxPos.Y + size.Y - barHeight - 7)
+                        data.HealthText.Text = "hp: " .. math.floor(humanoid.Health)
+                        data.HealthText.Visible = true
+                    else
+                        for _, obj in pairs(data) do obj.Visible = false end
+                    end
+                else
+                    for _, obj in pairs(data) do obj.Visible = false end
+                end
+            end
+        end)
+    end
+}
     {name="Freecam",fav=false,run=function() safeLoad("https://raw.githubusercontent.com/Leo12345111/Freecam/main/Freecam.lua") end},
     {name="Touch Fling",fav=false,run=function() safeLoad("https://pastebin.com/raw/LgZwZ7ZB") end},
     {name="Player Follower",fav=false,run=function() safeLoad("https://raw.githubusercontent.com/Leo12345111/PlayerFollower/main/PlayerFollower.lua") end},
     {name="Fling Players",fav=false,run=function() safeLoad("https://raw.githubusercontent.com/K1LAS1K/Ultimate-Fling-GUI/main/flingscript.lua") end},
+    {name="Part Conntroller",fav=false,run=function() safeLoad("https://raw.githubusercontent.com/hm5650/PCR/refs/heads/main/PartControllerRemote") end},
 }
 
 local mainGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
