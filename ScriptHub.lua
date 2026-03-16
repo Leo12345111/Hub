@@ -216,7 +216,12 @@ local scripts = {
     end},
 
     {name = "ESP", fav = false, run = function()
+        local Players = game:GetService("Players")
+        local RunService = game:GetService("RunService")
+        local UserInputService = game:GetService("UserInputService")
+        local LocalPlayer = Players.LocalPlayer
         local Camera = workspace.CurrentCamera
+
         local ScreenGui = Instance.new("ScreenGui")
         ScreenGui.Name = "ESPGui"
         ScreenGui.ResetOnSpawn = false
@@ -229,8 +234,8 @@ local scripts = {
         MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         MainFrame.BorderSizePixel = 2
         MainFrame.Active = true
+        MainFrame.Draggable = true
         MainFrame.Parent = ScreenGui
-        makeDraggable(MainFrame)
 
         local Title = Instance.new("TextLabel")
         Title.Size = UDim2.new(1, 0, 0, 30)
