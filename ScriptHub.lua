@@ -216,10 +216,6 @@ local scripts = {
     end},
 
     {name = "ESP", fav = false, run = function()
-        local Players = game:GetService("Players")
-        local RunService = game:GetService("RunService")
-        local UserInputService = game:GetService("UserInputService")
-        local LocalPlayer = Players.LocalPlayer
         local Camera = workspace.CurrentCamera
 
         local ScreenGui = Instance.new("ScreenGui")
@@ -384,7 +380,402 @@ local scripts = {
     {name="Touch Fling", fav=false, run=function() safeLoad("https://pastebin.com/raw/LgZwZ7ZB") end},
     {name="Player Follower", fav=false, run=function() safeLoad("https://raw.githubusercontent.com/Leo12345111/PlayerFollower/main/PlayerFollower.lua") end},
     {name="Fling Players", fav=false, run=function() safeLoad("https://raw.githubusercontent.com/K1LAS1K/Ultimate-Fling-GUI/main/flingscript.lua") end},
-    {name="Part Conntroller", fav=false, run=function() safeLoad("https://raw.githubusercontent.com/hm5650/PCR/refs/heads/main/PartControllerRemote") end}
+    {name="Part Conntroller", fav=false, run=function() safeLoad("https://raw.githubusercontent.com/hm5650/PCR/refs/heads/main/PartControllerRemote") end},
+    
+    {name = "Utility Hub X", fav = false, run = function()
+        if game:GetService("CoreGui"):FindFirstChild("UtilityHubX") then
+            game:GetService("CoreGui").UtilityHubX:Destroy()
+        end
+
+        local tweenService = game:GetService("TweenService")
+        local mouse = LocalPlayer:GetMouse()
+
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "UtilityHubX"
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = game:GetService("CoreGui")
+
+        local dropShadow = Instance.new("ImageLabel")
+        dropShadow.Name = "DropShadow"
+        dropShadow.BackgroundTransparency = 1
+        dropShadow.Position = UDim2.new(0.5, -145, 0.5, -245)
+        dropShadow.Size = UDim2.new(0, 290, 0, 490)
+        dropShadow.Image = "rbxassetid://6015897843"
+        dropShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+        dropShadow.ImageTransparency = 0.5
+        dropShadow.ScaleType = Enum.ScaleType.Slice
+        dropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
+        dropShadow.Parent = screenGui
+
+        local utilMainFrame = Instance.new("Frame")
+        utilMainFrame.Size = UDim2.new(1, -30, 1, -30)
+        utilMainFrame.Position = UDim2.new(0, 15, 0, 15)
+        utilMainFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
+        utilMainFrame.BorderSizePixel = 0
+        utilMainFrame.Parent = dropShadow
+
+        local utilMainCorner = Instance.new("UICorner")
+        utilMainCorner.CornerRadius = UDim.new(0, 12)
+        utilMainCorner.Parent = utilMainFrame
+
+        local utilTitleBar = Instance.new("Frame")
+        utilTitleBar.Size = UDim2.new(1, 0, 0, 50)
+        utilTitleBar.BackgroundTransparency = 1
+        utilTitleBar.Parent = utilMainFrame
+
+        local utilTitleText = Instance.new("TextLabel")
+        utilTitleText.Size = UDim2.new(1, -50, 1, 0)
+        utilTitleText.Position = UDim2.new(0, 20, 0, 0)
+        utilTitleText.BackgroundTransparency = 1
+        utilTitleText.Text = "UTILITY HUB"
+        utilTitleText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        utilTitleText.Font = Enum.Font.GothamBlack
+        utilTitleText.TextSize = 18
+        utilTitleText.TextXAlignment = Enum.TextXAlignment.Left
+        utilTitleText.Parent = utilTitleBar
+
+        local utilTitleGradient = Instance.new("UIGradient")
+        utilTitleGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 180, 255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 150, 255))
+        })
+        utilTitleGradient.Parent = utilTitleText
+
+        local utilCloseButton = Instance.new("TextButton")
+        utilCloseButton.Size = UDim2.new(0, 28, 0, 28)
+        utilCloseButton.Position = UDim2.new(1, -38, 0.5, -14)
+        utilCloseButton.BackgroundColor3 = Color3.fromRGB(40, 30, 35)
+        utilCloseButton.Text = "✕"
+        utilCloseButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+        utilCloseButton.Font = Enum.Font.GothamBold
+        utilCloseButton.TextSize = 14
+        utilCloseButton.AutoButtonColor = false
+        utilCloseButton.Parent = utilTitleBar
+
+        local utilCloseCorner = Instance.new("UICorner")
+        utilCloseCorner.CornerRadius = UDim.new(0, 8)
+        utilCloseCorner.Parent = utilCloseButton
+
+        local currentDisable = nil
+        local currentActiveBar = nil
+
+        utilCloseButton.MouseEnter:Connect(function()
+            tweenService:Create(utilCloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 80, 80), TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+        end)
+
+        utilCloseButton.MouseLeave:Connect(function()
+            tweenService:Create(utilCloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 30, 35), TextColor3 = Color3.fromRGB(255, 100, 100)}):Play()
+        end)
+
+        utilCloseButton.MouseButton1Click:Connect(function()
+            if currentDisable then
+                currentDisable()
+                currentDisable = nil
+            end
+            screenGui:Destroy()
+        end)
+
+        local dragging = false
+        local dragStart = nil
+        local startPos = nil
+
+        utilTitleBar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                dragStart = input.Position
+                startPos = dropShadow.Position
+                
+                tweenService:Create(dropShadow, TweenInfo.new(0.3), {ImageTransparency = 0.7}):Play()
+                
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                        tweenService:Create(dropShadow, TweenInfo.new(0.3), {ImageTransparency = 0.5}):Play()
+                    end
+                end)
+            end
+        end)
+
+        UIS.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+                if dragging then
+                    local delta = input.Position - dragStart
+                    local targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                    dropShadow.Position = dropShadow.Position:Lerp(targetPos, 0.4)
+                end
+            end
+        end)
+
+        local utilScrollFrame = Instance.new("ScrollingFrame")
+        utilScrollFrame.Size = UDim2.new(1, 0, 1, -50)
+        utilScrollFrame.Position = UDim2.new(0, 0, 0, 50)
+        utilScrollFrame.BackgroundTransparency = 1
+        utilScrollFrame.ScrollBarThickness = 2
+        utilScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(150, 150, 180)
+        utilScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+        utilScrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+        utilScrollFrame.Parent = utilMainFrame
+
+        local utilLayout = Instance.new("UIListLayout")
+        utilLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        utilLayout.Padding = UDim.new(0, 10)
+        utilLayout.Parent = utilScrollFrame
+
+        local utilPadding = Instance.new("UIPadding")
+        utilPadding.PaddingTop = UDim.new(0, 5)
+        utilPadding.PaddingBottom = UDim.new(0, 20)
+        utilPadding.Parent = utilScrollFrame
+
+        local function getHumanoid()
+            local char = LocalPlayer.Character
+            if char then
+                return char:FindFirstChildOfClass("Humanoid")
+            end
+            return nil
+        end
+
+        local function getRaycast()
+            local origin = mouse.UnitRay.Origin
+            local direction = mouse.UnitRay.Direction * 1500
+            local params = RaycastParams.new()
+            local ignoreList = {LocalPlayer.Character}
+            params.FilterType = Enum.RaycastFilterType.Exclude
+
+            local maxTries = 50
+            local tries = 0
+
+            while tries < maxTries do
+                tries = tries + 1
+                params.FilterDescendantsInstances = ignoreList
+                local result = workspace:Raycast(origin, direction, params)
+                
+                if not result then return nil end
+                
+                if result.Instance.Transparency == 1 or not result.Instance.CanCollide then
+                    table.insert(ignoreList, result.Instance)
+                else
+                    return result
+                end
+            end
+            return nil
+        end
+
+        local function createUtilButton(text, desc, color1, color2, enableFunc, disableFunc)
+            local btnFrame = Instance.new("Frame")
+            btnFrame.Size = UDim2.new(0, 230, 0, 55)
+            btnFrame.BackgroundTransparency = 1
+            btnFrame.Parent = utilScrollFrame
+
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 1, 0)
+            btn.Position = UDim2.new(0.5, 0, 0.5, 0)
+            btn.AnchorPoint = Vector2.new(0.5, 0.5)
+            btn.Text = ""
+            btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            btn.AutoButtonColor = false
+            btn.ClipsDescendants = true
+            btn.Parent = btnFrame
+
+            local activeBar = Instance.new("Frame")
+            activeBar.Size = UDim2.new(0, 0, 1, 0)
+            activeBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            activeBar.BorderSizePixel = 0
+            activeBar.Parent = btn
+
+            local titleLbl = Instance.new("TextLabel")
+            titleLbl.Size = UDim2.new(1, -15, 0.5, 0)
+            titleLbl.Position = UDim2.new(0, 15, 0.15, 0)
+            titleLbl.BackgroundTransparency = 1
+            titleLbl.Text = text
+            titleLbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+            titleLbl.Font = Enum.Font.GothamBold
+            titleLbl.TextSize = 14
+            titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+            titleLbl.Parent = btn
+
+            local descLbl = Instance.new("TextLabel")
+            descLbl.Size = UDim2.new(1, -15, 0.35, 0)
+            descLbl.Position = UDim2.new(0, 15, 0.55, 0)
+            descLbl.BackgroundTransparency = 1
+            descLbl.Text = desc
+            descLbl.TextColor3 = Color3.fromRGB(220, 220, 220)
+            descLbl.Font = Enum.Font.Gotham
+            descLbl.TextSize = 10
+            descLbl.TextXAlignment = Enum.TextXAlignment.Left
+            descLbl.Parent = btn
+
+            local gradient = Instance.new("UIGradient")
+            gradient.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, color1),
+                ColorSequenceKeypoint.new(1, color2)
+            })
+            gradient.Rotation = 30
+            gradient.Parent = btn
+
+            local btnCorner = Instance.new("UICorner")
+            btnCorner.CornerRadius = UDim.new(0, 8)
+            btnCorner.Parent = btn
+
+            btn.MouseEnter:Connect(function()
+                tweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(1, 4, 1, 4)}):Play()
+            end)
+
+            btn.MouseLeave:Connect(function()
+                tweenService:Create(btn, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+            end)
+
+            btn.MouseButton1Down:Connect(function()
+                tweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(0.96, 0, 0.96, 0)}):Play()
+            end)
+
+            btn.MouseButton1Up:Connect(function()
+                tweenService:Create(btn, TweenInfo.new(0.1), {Size = UDim2.new(1, 4, 1, 4)}):Play()
+            end)
+
+            btn.MouseButton1Click:Connect(function()
+                if currentDisable then
+                    currentDisable()
+                    currentDisable = nil
+                end
+                
+                if currentActiveBar then
+                    tweenService:Create(currentActiveBar, TweenInfo.new(0.2), {Size = UDim2.new(0, 0, 1, 0)}):Play()
+                end
+
+                if currentActiveBar == activeBar then
+                    currentActiveBar = nil
+                    return
+                end
+
+                currentActiveBar = activeBar
+                currentDisable = disableFunc
+                tweenService:Create(activeBar, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = UDim2.new(0, 8, 1, 0)}):Play()
+
+                if enableFunc then
+                    enableFunc()
+                end
+            end)
+        end
+
+        createUtilButton("Speed Toggle", "Sets your running speed to 25", Color3.fromRGB(30, 100, 200), Color3.fromRGB(50, 150, 255), function()
+            local hum = getHumanoid()
+            if hum then hum.WalkSpeed = 25 end
+        end, function()
+            local hum = getHumanoid()
+            if hum then hum.WalkSpeed = 16 end
+        end)
+
+        createUtilButton("Jump Toggle", "Boosts your jump power to 100", Color3.fromRGB(200, 50, 50), Color3.fromRGB(255, 100, 80), function()
+            local hum = getHumanoid()
+            if hum then
+                hum.UseJumpPower = true
+                hum.JumpPower = 100
+            end
+        end, function()
+            local hum = getHumanoid()
+            if hum then
+                hum.UseJumpPower = true
+                hum.JumpPower = 50
+            end
+        end)
+
+        createUtilButton("Combined Boost", "Gives you both speed and jump boosts", Color3.fromRGB(120, 50, 200), Color3.fromRGB(180, 100, 255), function()
+            local hum = getHumanoid()
+            if hum then
+                hum.WalkSpeed = 25
+                hum.UseJumpPower = true
+                hum.JumpPower = 100
+            end
+        end, function()
+            local hum = getHumanoid()
+            if hum then
+                hum.WalkSpeed = 16
+                hum.UseJumpPower = true
+                hum.JumpPower = 50
+            end
+        end)
+
+        local activeConnection = nil
+
+        createUtilButton("TP Cursor", "Right-click to teleport (Max 1000 studs)", Color3.fromRGB(40, 160, 100), Color3.fromRGB(80, 220, 140), function()
+            activeConnection = mouse.Button2Down:Connect(function()
+                local result = getRaycast()
+                local char = LocalPlayer.Character
+                if result and char and char:FindFirstChild("HumanoidRootPart") then
+                    local hrp = char.HumanoidRootPart
+                    local distance = (hrp.Position - result.Position).Magnitude
+                    
+                    if distance <= 1000 then
+                        local targetPos = result.Position + Vector3.new(0, 3, 0)
+                        hrp.CFrame = CFrame.new(targetPos, targetPos + mouse.UnitRay.Direction * Vector3.new(1, 0, 1))
+                    end
+                end
+            end)
+        end, function()
+            if activeConnection then
+                activeConnection:Disconnect()
+                activeConnection = nil
+            end
+        end)
+
+        createUtilButton("Low Gravity", "Lowers gravity to float around smoothly", Color3.fromRGB(200, 140, 30), Color3.fromRGB(255, 180, 60), function()
+            workspace.Gravity = 40
+        end, function()
+            workspace.Gravity = 196.2
+        end)
+
+        local activeFire = nil
+
+        createUtilButton("Fire Aura", "Spawns an epic particle trail behind you", Color3.fromRGB(220, 80, 30), Color3.fromRGB(255, 130, 80), function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                activeFire = Instance.new("Fire")
+                activeFire.Size = 6
+                activeFire.Heat = 10
+                activeFire.Parent = char.HumanoidRootPart
+            end
+        end, function()
+            if activeFire then
+                activeFire:Destroy()
+                activeFire = nil
+            end
+        end)
+
+        createUtilButton("Destruction Cursor", "Left-click to delete parts instantly", Color3.fromRGB(180, 40, 120), Color3.fromRGB(240, 80, 160), function()
+            activeConnection = mouse.Button1Down:Connect(function()
+                local result = getRaycast()
+                if result then
+                    local target = result.Instance
+                    if not target:IsA("Terrain") and not target:FindFirstAncestorOfClass("Humanoid") then
+                        target:Destroy()
+                    end
+                end
+            end)
+        end, function()
+            if activeConnection then
+                activeConnection:Disconnect()
+                activeConnection = nil
+            end
+        end)
+
+        createUtilButton("Size Modifier", "Toggles your character into a giant size", Color3.fromRGB(30, 160, 160), Color3.fromRGB(70, 220, 220), function()
+            local hum = getHumanoid()
+            if hum then
+                for _, v in pairs({"BodyHeightScale", "BodyWidthScale", "BodyDepthScale", "HeadScale"}) do
+                    local scale = hum:FindFirstChild(v)
+                    if scale then scale.Value = 2.5 end
+                end
+            end
+        end, function()
+            local hum = getHumanoid()
+            if hum then
+                for _, v in pairs({"BodyHeightScale", "BodyWidthScale", "BodyDepthScale", "HeadScale"}) do
+                    local scale = hum:FindFirstChild(v)
+                    if scale then scale.Value = 1 end
+                end
+            end
+        end)
+    end}
 }
 
 local mainGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
