@@ -541,7 +541,7 @@ local scripts = {
             local ignoreList = {LocalPlayer.Character}
             params.FilterType = Enum.RaycastFilterType.Exclude
 
-            local maxTries = 50
+            local maxTries = 250
             local tries = 0
 
             while tries < maxTries do
@@ -699,13 +699,12 @@ local scripts = {
 
         createUtilButton("TP Cursor", "Double-click to teleport (Max 1000 studs)", Color3.fromRGB(40, 160, 100), Color3.fromRGB(80, 220, 140), function()
             local lastClickTime = 0
-            local doubleClickThreshold = 0.25 -- Registers if second click is within 0.25 seconds
+            local doubleClickThreshold = 0.5 -- Registers if second click is within 0.5 seconds
             
             activeConnection = mouse.Button1Down:Connect(function()
                 local currentTime = os.clock()
                 
                 if currentTime - lastClickTime <= doubleClickThreshold then
-                    -- Double click recognized
                     local result = getRaycast()
                     local char = LocalPlayer.Character
                     if result and char and char:FindFirstChild("HumanoidRootPart") then
@@ -717,9 +716,8 @@ local scripts = {
                             hrp.CFrame = CFrame.new(targetPos, targetPos + mouse.UnitRay.Direction * Vector3.new(1, 0, 1))
                         end
                     end
-                    lastClickTime = 0 -- Reset so a third click doesn't instantly trigger it again
+                    lastClickTime = 0 
                 else
-                    -- Single click, save the time
                     lastClickTime = currentTime
                 end
             end)
