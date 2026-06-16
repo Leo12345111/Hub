@@ -697,17 +697,19 @@ local scripts = {
 
         local activeConnection = nil
 
-        createUtilButton("TP Cursor", "Right-click to teleport (Max 1000 studs)", Color3.fromRGB(40, 160, 100), Color3.fromRGB(80, 220, 140), function()
-            activeConnection = mouse.Button2Down:Connect(function()
-                local result = getRaycast()
-                local char = LocalPlayer.Character
-                if result and char and char:FindFirstChild("HumanoidRootPart") then
-                    local hrp = char.HumanoidRootPart
-                    local distance = (hrp.Position - result.Position).Magnitude
-                    
-                    if distance <= 1000 then
-                        local targetPos = result.Position + Vector3.new(0, 3, 0)
-                        hrp.CFrame = CFrame.new(targetPos, targetPos + mouse.UnitRay.Direction * Vector3.new(1, 0, 1))
+        createUtilButton("TP Cursor", "Press 'R' to teleport (Max 1000 studs)", Color3.fromRGB(40, 160, 100), Color3.fromRGB(80, 220, 140), function()
+            activeConnection = UIS.InputBegan:Connect(function(input, gameProcessed)
+                if not gameProcessed and input.KeyCode == Enum.KeyCode.R then
+                    local result = getRaycast()
+                    local char = LocalPlayer.Character
+                    if result and char and char:FindFirstChild("HumanoidRootPart") then
+                        local hrp = char.HumanoidRootPart
+                        local distance = (hrp.Position - result.Position).Magnitude
+                        
+                        if distance <= 1000 then
+                            local targetPos = result.Position + Vector3.new(0, 3, 0)
+                            hrp.CFrame = CFrame.new(targetPos, targetPos + mouse.UnitRay.Direction * Vector3.new(1, 0, 1))
+                        end
                     end
                 end
             end)
