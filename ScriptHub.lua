@@ -754,37 +754,49 @@ local scripts = {
                     local Yeeted = false
                     local movel = 0.1
                     
-                    -- Creates a connection that updates teleportation SUPER FAST (every physics frame)
-                    -- without blocking the velocity manipulation loop below
+                    -- Super fast tracking update that includes VELOCITY PREDICTION
                     local tpConn = RunService.Stepped:Connect(function()
                         if RootPart and BasePart and BasePart.Parent then
-                            -- Teleport exactly 0.5 studs in FRONT of the target's look direction (-Z is front)
-                            RootPart.CFrame = BasePart.CFrame * CFrame.new(0, 0, -0.5)
+                            -- Guarantee physical hitboxes are active for the overlap
+                            RootPart.CanCollide = true
+                            
+                            -- Predict where they will be based on their current velocity to avoid lagging behind moving players
+                            local predictedCFrame = BasePart.CFrame + (BasePart.Velocity * 0.065)
+                            
+                            -- Teleport exactly 0.5 studs in FRONT of the target's predicted look direction (-Z is front)
+                            RootPart.CFrame = predictedCFrame * CFrame.new(0, 0, -0.5)
                         end
                     end)
                     
                     repeat
                         if not BasePart or not BasePart.Parent then Yeeted = true break end
                         
-                        -- Immediately break out of the loop and count it as successful the split second target velocity spikes
+                        -- Immediately break out of the loop the split second target velocity spikes
                         if BasePart.AssemblyLinearVelocity.Magnitude >= 150 or BasePart.Velocity.Magnitude >= 150 then 
                             Yeeted = true 
                             break 
                         end
 
                         if RootPart and THumanoid then
-                            -- Executing the exact Touch Fling mechanics while tpConn handles positional updates
-                            local vel = RootPart.Velocity
-                            if vel.Magnitude > 1000 then vel = Vector3.zero end
+                            -- Calculate direction pointing precisely from you into the target
+                            local dir = (BasePart.Position - RootPart.Position).Unit
+                            if dir.Magnitude ~= dir.Magnitude then dir = Vector3.new(0, -1, 0) end -- Handle rare NaN cases
                             
-                            RootPart.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                            -- Spike the linear velocity INTO the target to sweep hitboxes through each other
+                            RootPart.Velocity = (dir * 10000) + Vector3.new(0, 10000, 0)
+                            RootPart.RotVelocity = Vector3.new(20000, 20000, 20000)
+                            
                             RunService.RenderStepped:Wait()
                             
-                            RootPart.Velocity = vel
+                            -- Match their velocity briefly during recovery so we don't fall off moving targets
+                            RootPart.Velocity = BasePart.Velocity
+                            RootPart.RotVelocity = Vector3.zero
+                            
                             RunService.Stepped:Wait()
                             
-                            RootPart.Velocity = vel + Vector3.new(0, movel, 0)
+                            RootPart.Velocity = BasePart.Velocity + Vector3.new(0, movel, 0)
                             movel = -movel
+                            
                             RunService.Heartbeat:Wait()
                         else
                             break
@@ -792,6 +804,7 @@ local scripts = {
                     until Time + TimeToWait < tick() or not FlingActive
                     
                     if tpConn then tpConn:Disconnect() end
+                    if RootPart then RootPart.CanCollide = false end -- Reset
                     return Yeeted
                 end
                 
