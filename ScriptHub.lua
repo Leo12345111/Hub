@@ -1,3 +1,5 @@
+--- START OF FILE Paste June 19, 2026 - 1:15PM ---
+
 local UIS = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -745,55 +747,35 @@ local scripts = {
                 
                 if not TCharacter:FindFirstChildWhichIsA("BasePart") then return false end
                 
-                local FPos = function(BasePart, Pos, Ang)
-                    RootPart.CFrame = CFrame.new(BasePart.Position) * Pos * Ang
-                    Character:SetPrimaryPartCFrame(CFrame.new(BasePart.Position) * Pos * Ang)
-                    RootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
-                    RootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
-                end
-                
                 local SFBasePart = function(BasePart)
                     local TimeToWait = 2.5
                     local Time = tick()
-                    local Angle = 0
                     local Yeeted = false
+                    local movel = 0.1
+                    
                     repeat
+                        RunService.Heartbeat:Wait()
                         if not BasePart or not BasePart.Parent then Yeeted = true break end
-                        if BasePart.Velocity.Magnitude >= 300 then Yeeted = true break end
+                        
+                        -- Immediately break if target reaches a high velocity indicating successful fling
+                        if BasePart.Velocity.Magnitude >= 300 then 
+                            Yeeted = true 
+                            break 
+                        end
 
                         if RootPart and THumanoid then
-                            if BasePart.Velocity.Magnitude < 50 then
-                                Angle = Angle + 100
-                                FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle),0 ,0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle),0 ,0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection * BasePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, 1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle),0 ,0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, -1.5, 0) + THumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
-                                task.wait()
-                            else
-                                FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, -1.5, -THumanoid.WalkSpeed), CFrame.Angles(0, 0, 0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, 1.5, THumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
-                                task.wait()
-                                FPos(BasePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
-                                task.wait()
-                            end
+                            -- Teleport exactly 0.5 studs in FRONT of the target's look direction (-Z is front in Roblox)
+                            RootPart.CFrame = BasePart.CFrame * CFrame.new(0, 0, -0.5)
+
+                            local vel = RootPart.Velocity
+                            RootPart.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+                            RunService.RenderStepped:Wait()
+                            RootPart.Velocity = vel
+                            RunService.Stepped:Wait()
+                            RootPart.Velocity = vel + Vector3.new(0, movel, 0)
+                            movel = -movel
                         end
-                    until Time + TimeToWait < tick() or not FlingActive or (BasePart and BasePart.Velocity.Magnitude >= 300)
+                    until Time + TimeToWait < tick() or not FlingActive
                     
                     if BasePart and BasePart.Velocity.Magnitude >= 300 then Yeeted = true end
                     return Yeeted
@@ -801,11 +783,6 @@ local scripts = {
                 
                 getgenv().FPDH = workspace.FallenPartsDestroyHeight
                 workspace.FallenPartsDestroyHeight = 0/0
-                
-                local BV = Instance.new("BodyVelocity")
-                BV.Parent = RootPart
-                BV.Velocity = Vector3.new(0, 0, 0)
-                BV.MaxForce = Vector3.new(9e9, 9e9, 9e9)
                 
                 Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
                 
@@ -815,22 +792,20 @@ local scripts = {
                 elseif Handle then WasFlung = SFBasePart(Handle)
                 else return false end
                 
-                BV:Destroy()
                 Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
                 workspace.CurrentCamera.CameraSubject = Humanoid
                 
-                ResetPlayerMomentum()
-                
+                -- Instant recovery right after the fling hits
                 if getgenv().OldPos then
-                    repeat
-                        RootPart.CFrame = getgenv().OldPos * CFrame.new(0, .5, 0)
-                        Character:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, .5, 0))
-                        Humanoid:ChangeState("GettingUp")
-                        ResetPlayerMomentum() 
-                        task.wait()
-                    until (RootPart.Position - getgenv().OldPos.p).Magnitude < 25
+                    for _ = 1, 3 do -- Iterate rapidly to guarantee the server halts our momentum
+                        RootPart.CFrame = getgenv().OldPos
+                        if Character.PrimaryPart then
+                            Character:SetPrimaryPartCFrame(getgenv().OldPos)
+                        end
+                        ResetPlayerMomentum()
+                        task.wait(0.05)
+                    end
                     
-                    ResetPlayerMomentum() 
                     workspace.FallenPartsDestroyHeight = getgenv().FPDH
                 end
                 
