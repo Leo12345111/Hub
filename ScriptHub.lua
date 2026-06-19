@@ -556,6 +556,7 @@ local scripts = {
         local SelectedTargets = {}
         local PlayerCheckboxes = {}
         local FlingActive = false
+        local OriginalStartPos = nil
 
         local function ResetPlayerMomentum()
             local Char = Player.Character
@@ -717,6 +718,29 @@ local scripts = {
             end)
         end
 
+        local function StopFling()
+            if not FlingActive then return end
+            FlingActive = false
+            
+            -- Revert perfectly back to the ORIGINAL position
+            if OriginalStartPos and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = Player.Character.HumanoidRootPart
+                -- Forcefully secure the position while zeroing out all massive momenta over several frames
+                for _ = 1, 5 do
+                    hrp.CFrame = OriginalStartPos
+                    if Player.Character.PrimaryPart then
+                        Player.Character:SetPrimaryPartCFrame(OriginalStartPos)
+                    end
+                    ResetPlayerMomentum()
+                    task.wait(0.05)
+                end
+            end
+            OriginalStartPos = nil
+            
+            UpdateStatus()
+            Message("Stopped", "Fling process has halted", 2)
+        end
+
         local function SkidFling(TargetPlayer)
             local Character = Player.Character
             local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
@@ -732,11 +756,6 @@ local scripts = {
             if Accessory then Handle = Accessory:FindFirstChild("Handle") end
             
             if Character and Humanoid and RootPart then
-                -- Backup position before engaging
-                if RootPart.Velocity.Magnitude < 50 then
-                    getgenv().OldPos = RootPart.CFrame
-                end
-                
                 if THumanoid and THumanoid.Sit then
                     Message("Error", TargetPlayer.Name .. " is sitting", 2)
                     return false
@@ -754,57 +773,55 @@ local scripts = {
                     local Yeeted = false
                     local movel = 0.1
                     
-                    -- Super fast tracking update that includes VELOCITY PREDICTION
-                    local tpConn = RunService.Stepped:Connect(function()
+                    -- Frame-perfect teleporting logic + Aggressive Collision Forcing
+                    local tpConn = RunService.RenderStepped:Connect(function()
                         if RootPart and BasePart and BasePart.Parent then
-                            -- Guarantee physical hitboxes are active for the overlap
-                            RootPart.CanCollide = true
+                            -- FORCE COLLISION: Make every part of our character physically dense and solid against them
+                            for _, p in ipairs(Character:GetChildren()) do
+                                if p:IsA("BasePart") then 
+                                    p.CanCollide = true 
+                                end
+                            end
                             
-                            -- Predict where they will be based on their current velocity to avoid lagging behind moving players
-                            local predictedCFrame = BasePart.CFrame + (BasePart.Velocity * 0.065)
-                            
-                            -- Teleport exactly 0.5 studs in FRONT of the target's predicted look direction (-Z is front)
-                            RootPart.CFrame = predictedCFrame * CFrame.new(0, 0, -0.5)
+                            -- Predict position to stick to moving targets, exactly 0.5 studs in FRONT (-Z) of their path
+                            local predictedPos = BasePart.CFrame + (BasePart.Velocity * 0.05)
+                            RootPart.CFrame = predictedPos * CFrame.new(0, 0, -0.5)
                         end
                     end)
                     
                     repeat
                         if not BasePart or not BasePart.Parent then Yeeted = true break end
                         
-                        -- Immediately break out of the loop the split second target velocity spikes
+                        -- Immediately consider successful if target velocity violently spikes
                         if BasePart.AssemblyLinearVelocity.Magnitude >= 150 or BasePart.Velocity.Magnitude >= 150 then 
                             Yeeted = true 
                             break 
                         end
 
                         if RootPart and THumanoid then
-                            -- Calculate direction pointing precisely from you into the target
-                            local dir = (BasePart.Position - RootPart.Position).Unit
-                            if dir.Magnitude ~= dir.Magnitude then dir = Vector3.new(0, -1, 0) end -- Handle rare NaN cases
+                            -- THE EXACT TOUCH FLING VELOCITY MECHANIC:
+                            local vel = BasePart.Velocity
+                            if vel.Magnitude < 1 then vel = Vector3.new(0, 0.1, 0) end
                             
-                            -- Spike the linear velocity INTO the target to sweep hitboxes through each other
-                            RootPart.Velocity = (dir * 10000) + Vector3.new(0, 10000, 0)
-                            RootPart.RotVelocity = Vector3.new(20000, 20000, 20000)
-                            
+                            -- Extreme velocity spike
+                            RootPart.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
                             RunService.RenderStepped:Wait()
                             
-                            -- Match their velocity briefly during recovery so we don't fall off moving targets
-                            RootPart.Velocity = BasePart.Velocity
-                            RootPart.RotVelocity = Vector3.zero
-                            
+                            -- Return to target velocity
+                            RootPart.Velocity = vel
                             RunService.Stepped:Wait()
                             
-                            RootPart.Velocity = BasePart.Velocity + Vector3.new(0, movel, 0)
+                            -- Invert phase
+                            RootPart.Velocity = vel + Vector3.new(0, movel, 0)
                             movel = -movel
                             
                             RunService.Heartbeat:Wait()
                         else
                             break
                         end
-                    until Time + TimeToWait < tick() or not FlingActive
+                    until tick() > Time + TimeToWait or not FlingActive
                     
                     if tpConn then tpConn:Disconnect() end
-                    if RootPart then RootPart.CanCollide = false end -- Reset
                     return Yeeted
                 end
                 
@@ -821,26 +838,9 @@ local scripts = {
                 
                 Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
                 workspace.CurrentCamera.CameraSubject = Humanoid
+                workspace.FallenPartsDestroyHeight = getgenv().FPDH
                 
-                -- Instant TP and massive momentum/acceleration zeroing upon returning
-                if getgenv().OldPos then
-                    local freezeConn
-                    -- Connecting to Heartbeat forcibly resets position and zeroes momentum every single tick for 0.25 seconds ensuring no residual forces remain
-                    freezeConn = RunService.Heartbeat:Connect(function()
-                        if RootPart then
-                            RootPart.CFrame = getgenv().OldPos
-                            if Character.PrimaryPart then
-                                Character:SetPrimaryPartCFrame(getgenv().OldPos)
-                            end
-                            ResetPlayerMomentum()
-                        end
-                    end)
-                    task.wait(0.25)
-                    freezeConn:Disconnect()
-                    
-                    workspace.FallenPartsDestroyHeight = getgenv().FPDH
-                end
-                
+                ResetPlayerMomentum()
                 return WasFlung
             else
                 Message("Error", "Your character is not ready", 2)
@@ -848,16 +848,17 @@ local scripts = {
             end
         end
 
-        local function StopFling()
-            if not FlingActive then return end
-            FlingActive = false
-            ResetPlayerMomentum()
-            UpdateStatus()
-            Message("Stopped", "Fling has been halted manually", 2)
-        end
-
         local function StartFling()
             if FlingActive or CountSelectedTargets() == 0 then return end
+            
+            -- Capture initial absolute position RIGHT before engaging
+            local Char = Player.Character
+            if Char and Char:FindFirstChild("HumanoidRootPart") then
+                OriginalStartPos = Char.HumanoidRootPart.CFrame
+            else
+                Message("Error", "Could not capture start position", 2)
+                return
+            end
             
             FlingActive = true
             UpdateStatus()
@@ -878,10 +879,8 @@ local scripts = {
                     end
                     
                     if not hasTargets then
-                        FlingActive = false
-                        ResetPlayerMomentum()
-                        UpdateStatus()
                         Message("Auto-Stopped", "All selected targets have been flung!", 3)
+                        StopFling()
                         break
                     end
                     
