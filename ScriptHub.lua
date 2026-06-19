@@ -732,6 +732,7 @@ local scripts = {
             if Accessory then Handle = Accessory:FindFirstChild("Handle") end
             
             if Character and Humanoid and RootPart then
+                -- Backup position before engaging
                 if RootPart.Velocity.Magnitude < 50 then
                     getgenv().OldPos = RootPart.CFrame
                 end
@@ -753,31 +754,44 @@ local scripts = {
                     local Yeeted = false
                     local movel = 0.1
                     
+                    -- Creates a connection that updates teleportation SUPER FAST (every physics frame)
+                    -- without blocking the velocity manipulation loop below
+                    local tpConn = RunService.Stepped:Connect(function()
+                        if RootPart and BasePart and BasePart.Parent then
+                            -- Teleport exactly 0.5 studs in FRONT of the target's look direction (-Z is front)
+                            RootPart.CFrame = BasePart.CFrame * CFrame.new(0, 0, -0.5)
+                        end
+                    end)
+                    
                     repeat
-                        RunService.Heartbeat:Wait()
                         if not BasePart or not BasePart.Parent then Yeeted = true break end
                         
-                        -- Immediately break if target reaches a high velocity indicating successful fling
-                        if BasePart.Velocity.Magnitude >= 300 then 
+                        -- Immediately break out of the loop and count it as successful the split second target velocity spikes
+                        if BasePart.AssemblyLinearVelocity.Magnitude >= 150 or BasePart.Velocity.Magnitude >= 150 then 
                             Yeeted = true 
                             break 
                         end
 
                         if RootPart and THumanoid then
-                            -- Teleport exactly 0.5 studs in FRONT of the target's look direction (-Z is front in Roblox)
-                            RootPart.CFrame = BasePart.CFrame * CFrame.new(0, 0, -0.5)
-
+                            -- Executing the exact Touch Fling mechanics while tpConn handles positional updates
                             local vel = RootPart.Velocity
+                            if vel.Magnitude > 1000 then vel = Vector3.zero end
+                            
                             RootPart.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
                             RunService.RenderStepped:Wait()
+                            
                             RootPart.Velocity = vel
                             RunService.Stepped:Wait()
+                            
                             RootPart.Velocity = vel + Vector3.new(0, movel, 0)
                             movel = -movel
+                            RunService.Heartbeat:Wait()
+                        else
+                            break
                         end
                     until Time + TimeToWait < tick() or not FlingActive
                     
-                    if BasePart and BasePart.Velocity.Magnitude >= 300 then Yeeted = true end
+                    if tpConn then tpConn:Disconnect() end
                     return Yeeted
                 end
                 
@@ -795,16 +809,21 @@ local scripts = {
                 Humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
                 workspace.CurrentCamera.CameraSubject = Humanoid
                 
-                -- Instant recovery right after the fling hits
+                -- Instant TP and massive momentum/acceleration zeroing upon returning
                 if getgenv().OldPos then
-                    for _ = 1, 3 do -- Iterate rapidly to guarantee the server halts our momentum
-                        RootPart.CFrame = getgenv().OldPos
-                        if Character.PrimaryPart then
-                            Character:SetPrimaryPartCFrame(getgenv().OldPos)
+                    local freezeConn
+                    -- Connecting to Heartbeat forcibly resets position and zeroes momentum every single tick for 0.25 seconds ensuring no residual forces remain
+                    freezeConn = RunService.Heartbeat:Connect(function()
+                        if RootPart then
+                            RootPart.CFrame = getgenv().OldPos
+                            if Character.PrimaryPart then
+                                Character:SetPrimaryPartCFrame(getgenv().OldPos)
+                            end
+                            ResetPlayerMomentum()
                         end
-                        ResetPlayerMomentum()
-                        task.wait(0.05)
-                    end
+                    end)
+                    task.wait(0.25)
+                    freezeConn:Disconnect()
                     
                     workspace.FallenPartsDestroyHeight = getgenv().FPDH
                 end
